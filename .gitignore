@@ -1,0 +1,6 @@
+# Raster data
+data/*.tif
+data/*.tiff
+data/*.vrt
+data/*.aux.xml
+data/*.ovr
