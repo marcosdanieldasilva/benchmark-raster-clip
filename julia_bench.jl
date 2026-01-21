@@ -1,28 +1,24 @@
 # ==============================================================================
 # USING PACKAGES
 # ==============================================================================
-using ArchGDAL
 using BenchmarkTools
 using GeoIO
 using GeoStats
 using Rasters
+using ArchGDAL
 
 # ==============================================================================
 # PATH CONFIGURATION
 # ==============================================================================
 
-# Repository root = directory where this script is located
-REPO_ROOT = @__DIR__
-DATA_DIR = joinpath(REPO_ROOT, "data")
+DATADIR = "data"
+TIFFPATH = joinpath(DATADIR, "img.tif")
+GPKGPATH = joinpath(DATADIR, "poly.gpkg")
 
-TIF_PATH = joinpath(DATA_DIR, "img.tif")
-GPKG_PATH = joinpath(DATA_DIR, "poly.gpkg")
-
-isfile(TIF_PATH) || error("Raster file not found: $TIF_PATH")
-isfile(GPKG_PATH) || error("Vector file not found: $GPKG_PATH")
-
-println("Repository root: ", REPO_ROOT)
-println("Data directory:  ", DATA_DIR)
+isfile(TIFFPATH) || error("Raster file not found: $TIFFPATH")
+isfile(GPKGPATH) || error("Vector file not found: $GPKGPATH")
+println("Repository root: ", @__DIR__)
+println("Data directory:  ", DATADIR)
 
 # ==============================================================================
 # GEOSTATS.JL APPROACH (geometry-driven, view-based)
@@ -33,20 +29,20 @@ println("GeoStats.jl benchmark")
 println("==================================================")
 
 println("Loading raster grid with GeoIO...")
-geostats_grid = GeoIO.load(TIF_PATH)
+tiff = GeoIO.load(TIFFPATH)
 
 println("Loading polygon with GeoIO...")
-geostats_poly_table = GeoIO.load(GPKG_PATH)
+gpkg = GeoIO.load(GPKGPATH)
 
 # Extract geometry objects
-geo_poly = geostats_poly_table.geometry[1]
-grid_geom = geostats_grid.geometry
+poly = gpkg.geometry[1]
+grid = tiff.geometry
 
 println("\nIndex search (grid vs polygon):")
-@btime indices(grid_geom, geo_poly)
+@btime indices($grid, $poly);
 
 println("\nSubsetting grid (view creation):")
-@btime geostats_grid[geo_poly, :]
+@btime $tiff[$poly, :];
 
 # ==============================================================================
 # RASTERS.JL APPROACH (grid-based masking)
@@ -57,16 +53,16 @@ println("Rasters.jl benchmark")
 println("==================================================")
 
 println("Loading polygon with ArchGDAL...")
-ag_poly = ArchGDAL.read(GPKG_PATH) do ds
+ag_poly = ArchGDAL.read(GPKGPATH) do ds
   layer = ArchGDAL.getlayer(ds, 0)
   feat = first(layer)
   ArchGDAL.clone(ArchGDAL.getgeom(feat))
 end
 
 println("\nLazy raster masking:")
-raster_lazy = Raster(TIF_PATH; lazy=true)
-@btime mask(crop(raster_lazy; to=ag_poly); with=ag_poly)
+raster_lazy = Raster(TIFFPATH; lazy=true)
+@btime mask(crop($raster_lazy; to=$ag_poly); with=$ag_poly)
 
 println("\nEager raster masking:")
-raster_eager = Raster(TIF_PATH; lazy=false)
-@btime mask(crop(raster_eager; to=ag_poly); with=ag_poly)
+raster_eager = Raster(TIFFPATH; lazy=false)
+@btime mask(crop($raster_eager; to=$ag_poly); with=$ag_poly)
