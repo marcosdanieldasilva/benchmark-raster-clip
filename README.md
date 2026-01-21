@@ -35,7 +35,7 @@ benchmark-raster-clip/
 
 ### Polygon
 
-- `data/benchpoly.gpkg`
+- `data/poly.gpkg`
 - Single irregular polygon
 - Lightweight and included in the repository
 
