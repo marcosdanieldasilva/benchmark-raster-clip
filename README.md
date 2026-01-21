@@ -45,7 +45,7 @@ The raster file is not versioned due to size.
 
 Download it from:
 
-https://drive.google.com/file/d/1Rr1EEQ5iTdNVfvWxvZh5SqgQ_clTFGUy/view
+https://drive.google.com/file/d/1MXkcL9r3XoT19Oeo2UY8Ww9zzT6y8l6u/view?usp=sharing
 
 After downloading:
 
